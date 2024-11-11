@@ -1,0 +1,47 @@
+# Unity 기본 불필요 파일 및 폴더 제외
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+
+# Unity 메타파일 제외
+*.meta
+
+# JSON 파일 제외
+*.json
+
+# TensorBoard 외에 불필요한 로그 제외
+**/summaries/
+**/results/debug/
+
+# 기타 파일 제외
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Python 가상환경 제외
+venv/
+.env/
+
+# Anaconda 환경 관련 파일 제외
+*.conda
+*.ipynb_checkpoints/
+
+# VSCode 및 Visual Studio 관련 파일 제외 (사용 중일 경우)
+.vscode/
+*.csproj
+*.sln
+*.user
+*.pidb
+*.idea/
+*.suo
+*.userprefs
+*.unityproj
+
+# 로그 파일 외 모든 파일 제외
+*.log
+*.tmp
+*.bak
