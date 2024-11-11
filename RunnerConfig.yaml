@@ -1,0 +1,15 @@
+behaviors:
+  Runner:
+    trainer_type: ppo
+    max_steps: 1000
+    reward_signal:
+      type: extrinsic
+      strength: 1.0
+    hyperparameters:
+      batch_size: 64
+      buffer_size: 2048
+      learning_rate: 0.0003
+    network_settings:
+      hidden_units: 128
+      num_layers: 2
+    schedule: linear
