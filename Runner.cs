@@ -47,11 +47,16 @@ public class Runner : Agent
         sensor.AddObservation(transform.localPosition);
 
         // 필드 경계 크기 관측 (필드가 설정된 경우)
-        if (field != null)
-        {
-            Bounds fieldBounds = field.GetComponent<Collider>().bounds;
-            sensor.AddObservation(fieldBounds.size);
-        }
+     if (field != null)
+{
+    Bounds fieldBounds = field.GetComponent<Collider>().bounds;
+    sensor.AddObservation(fieldBounds.size); // 3 (Vector3)
+}
+else
+{
+    sensor.AddObservation(Vector3.zero); // 필드가 없을 경우 기본값 추가
+}
+
     }
 
     // Rigidbody를 통한 행동을 받아 에이전트 이동
@@ -105,4 +110,14 @@ public class Runner : Agent
         Bounds fieldBounds = field.GetComponent<Collider>().bounds;
         return fieldBounds.Contains(position); // 필드 내부인지 확인
     }
+    public override void Heuristic(in ActionBuffers actionsOut)
+{
+    var continuousActions = actionsOut.ContinuousActions;
+
+    // 예: 키보드 입력으로 X, Z 방향 이동 결정
+    continuousActions[0] = Input.GetAxis("Horizontal"); // X축 (A/D 키)
+    continuousActions[1] = Input.GetAxis("Vertical");   // Z축 (W/S 키)
+}
+
+  
 }
