@@ -5,70 +5,106 @@ using Unity.MLAgents.Actuators;
 
 public class Runner : Agent
 {
-    public Transform targetTransform; // ¸ñÇ¥ À§Ä¡¸¦ ³ªÅ¸³»´Â Transform º¯¼ö
-    private float rewardThreshold = 10f; // ÃÊ±â º¸»ó °ª
-    private int currentStep; // ÇöÀç ½ºÅÜ ¼ö
+    // ëª©í‘œ Transform (Inspectorì—ì„œ ì„¤ì •)
+    public Transform targetTransform;
 
-    // ¿¡ÀÌÀüÆ® ÃÊ±âÈ­
+    // í•„ë“œ GameObject (Inspectorì—ì„œ ì„¤ì •)
+    public GameObject field;
+
+    // ì—ì´ì „íŠ¸ ì´ë™ ì†ë„
+    public float moveSpeed = 5f;
+
+    // ì´ˆê¸° ê±°ë¦¬ ì €ì¥
+    private float initialDistance;
+
+    // ì—ì´ì „íŠ¸ ì´ˆê¸°í™”
     public override void Initialize()
     {
-        rewardThreshold = 10f;
-        currentStep = 0;
+        // ì´ˆê¸° ê±°ë¦¬ ê³„ì‚°
+        initialDistance = Vector3.Distance(transform.localPosition, targetTransform.localPosition);
     }
 
-    // ¿¡ÇÇ¼Òµå ½ÃÀÛ ½Ã È£ÃâµÇ´Â ÇÔ¼ö
+    // ì—í”¼ì†Œë“œ ì‹œì‘ ì‹œ í˜¸ì¶œ
     public override void OnEpisodeBegin()
     {
-        // ¿¡ÀÌÀüÆ® À§Ä¡ ÃÊ±âÈ­
-        transform.localPosition = new Vector3(Random.Range(-5f, 5f), 0.5f, Random.Range(-5f, 5f));
-        targetTransform.localPosition = new Vector3(0, 0.5f, 0);
-
-        rewardThreshold = 10f; // º¸»ó ÃÊ±âÈ­
-        currentStep = 0;       // ½ºÅÜ ¼ö ÃÊ±âÈ­
+        // ìœ„ì¹˜ ì´ˆê¸°í™” ì œê±° (Loverì™€ ì—ì´ì „íŠ¸ì˜ ê¸°ì¡´ ìœ„ì¹˜ ìœ ì§€)
+        // ì´ˆê¸° ê±°ë¦¬ ì¬ê³„ì‚° (í•™ìŠµ ì§„í–‰ ìƒí™©ì— ë”°ë¼ í•„ìš”)
+        initialDistance = Vector3.Distance(transform.localPosition, targetTransform.localPosition);
     }
 
-    // °üÃø µ¥ÀÌÅÍ ¼öÁı
+    // ê´€ì¸¡ ë°ì´í„° ìˆ˜ì§‘
     public override void CollectObservations(VectorSensor sensor)
     {
+        // ëª©í‘œì™€ ì—ì´ì „íŠ¸ì˜ ìƒëŒ€ ìœ„ì¹˜ ê´€ì¸¡
         sensor.AddObservation(targetTransform.localPosition - transform.localPosition);
+
+        // ì—ì´ì „íŠ¸ì˜ í˜„ì¬ ìœ„ì¹˜ ê´€ì¸¡
+        sensor.AddObservation(transform.localPosition);
+
+        // í•„ë“œ ê²½ê³„ í¬ê¸° ê´€ì¸¡ (í•„ë“œê°€ ì„¤ì •ëœ ê²½ìš°)
+        if (field != null)
+        {
+            Bounds fieldBounds = field.GetComponent<Collider>().bounds;
+            sensor.AddObservation(fieldBounds.size);
+        }
     }
 
-    // Çàµ¿À» ¼ö½ÅÇÏ´Â ÇÔ¼ö
+    // í–‰ë™ì„ ë°›ì•„ ì—ì´ì „íŠ¸ ì´ë™
     public override void OnActionReceived(ActionBuffers actions)
     {
-        float moveX = actions.ContinuousActions[0];
-        float moveZ = actions.ContinuousActions[1];
+        float moveX = Mathf.Clamp(actions.ContinuousActions[0], -1f, 1f); // Xì¶• ì´ë™
+        float moveZ = Mathf.Clamp(actions.ContinuousActions[1], -1f, 1f); // Zì¶• ì´ë™
 
-        // ¿¡ÀÌÀüÆ® ÀÌµ¿
-        transform.localPosition += new Vector3(moveX, 0, moveZ) * Time.deltaTime * 5f;
+        // ì—ì´ì „íŠ¸ ì´ë™
+        transform.localPosition += new Vector3(moveX, 0, moveZ) * Time.deltaTime * moveSpeed;
 
-        // ½ºÅÜ ¼ö Áõ°¡ ¹× ÄÜ¼Ö Ãâ·Â
-        currentStep++;
-        Debug.Log("Current Step: " + currentStep);
-
-        // º¸»ó °¨¼Ò
-        rewardThreshold -= 0.001f;
-        if (rewardThreshold <= 0)
+        // í•„ë“œ ì˜ì—­ ë²—ì–´ë‚¨ í™•ì¸
+        if (!IsWithinFieldBounds(transform.localPosition))
         {
+            SetReward(-10f); // í•„ë“œ ì´íƒˆ íŒ¨ë„í‹°
             EndEpisode();
+        }
+
+        // ëª©í‘œì™€ì˜ ê±°ë¦¬ ê³„ì‚°
+        float currentDistance = Vector3.Distance(transform.localPosition, targetTransform.localPosition);
+
+        // ëª©í‘œì— ê°€ê¹Œì›Œì§€ë©´ ë³´ìƒ ì œê³µ
+        if (currentDistance < initialDistance)
+        {
+            float distanceReward = (initialDistance - currentDistance) / initialDistance;
+            AddReward(distanceReward);
+            initialDistance = currentDistance; // í˜„ì¬ ê±°ë¦¬ë¥¼ ì—…ë°ì´íŠ¸
         }
     }
 
-    // ¸ñÇ¥ Ãæµ¹ ½Ã º¸»ó ºÎ¿©
+    // ëª©í‘œ ì§€ì  ë„ë‹¬ ì‹œ ë³´ìƒ ë° ì—í”¼ì†Œë“œ ì¢…ë£Œ
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Goal"))
+        if (other.transform == targetTransform)
         {
-            SetReward(rewardThreshold);
+            SetReward(1f); // ëª©í‘œ ë„ë‹¬ ì‹œ ìµœëŒ€ ë³´ìƒ
             EndEpisode();
         }
     }
 
-    // ¼öµ¿ Á¦¾î¸¦ À§ÇÑ ÇÔ¼ö (µğ¹ö±ë¿ë)
+    // ìˆ˜ë™ ì¡°ì‘ì„ ìœ„í•œ Heuristic ì„¤ì •
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         ActionSegment<float> continuousActions = actionsOut.ContinuousActions;
-        continuousActions[0] = Input.GetAxis("Horizontal");
-        continuousActions[1] = Input.GetAxis("Vertical");
+        continuousActions[0] = Input.GetAxis("Horizontal"); // ìˆ˜í‰ ì…ë ¥
+        continuousActions[1] = Input.GetAxis("Vertical");   // ìˆ˜ì§ ì…ë ¥
+    }
+
+    // í•„ë“œ ê²½ê³„ ë‚´ì— ìˆëŠ”ì§€ í™•ì¸
+    private bool IsWithinFieldBounds(Vector3 position)
+    {
+        if (field == null)
+        {
+            Debug.LogWarning("Field GameObjectê°€ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
+            return true; // í•„ë“œê°€ ì„¤ì •ë˜ì§€ ì•Šì•˜ë‹¤ë©´ í•­ìƒ true
+        }
+
+        Bounds fieldBounds = field.GetComponent<Collider>().bounds;
+        return fieldBounds.Contains(position); // í•„ë“œ ë‚´ë¶€ì¸ì§€ í™•ì¸
     }
 }

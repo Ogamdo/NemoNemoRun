@@ -17,6 +17,6 @@ behaviors:
       extrinsic:
         gamma: 0.99
         strength: 1.0
-    max_steps: 100000  # 학습 단계 최대치를 10,000으로 설정
+    max_steps: 500000  # 학습 단계 최대치를 50,000으로 설정
     time_horizon: 64
     summary_freq: 1000
