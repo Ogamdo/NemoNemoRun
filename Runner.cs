@@ -5,32 +5,32 @@ using Unity.MLAgents.Actuators;
 
 public class Runner : Agent
 {
-        private Vector3 targetInitialPosition; // 목표의 초기 위치
-    public Transform targetTransform; // 목표 Transform
-    public GameObject field;          // 필드 GameObject
-    public float moveSpeed = 5f;      // 에이전트 이동 속도
+    private Vector3 targetInitialPosition; // 목표의 초기 위치
+    public Transform targetTransform;     // 목표 Transform
+    public GameObject field;              // 필드 GameObject
+    public float moveSpeed = 50f;         // 에이전트 이동 속도
 
-
-    private float initialDistance;         // 초기 목표 거리 저장
-    private Rigidbody rb;
-   private Vector3 agentInitialPosition;
+    private float initialDistance;        // 초기 목표 거리 저장
+    private Rigidbody rb;                 // Rigidbody 캐싱
+    private Vector3 agentInitialPosition; // 에이전트의 초기 위치
 
     // 에이전트 초기화
     public override void Initialize()
     {
-         Rigidbody rb = GetComponent<Rigidbody>();
+        // Rigidbody 캐싱
+        rb = GetComponent<Rigidbody>();
+
         // 목표의 초기 위치 저장
         targetInitialPosition = targetTransform.localPosition;
-        //자신의 초기 위치 저장.
-       agentInitialPosition = transform.localPosition;
-
-        // 에이전트와 목표 간 초기 거리 계산
-      initialDistance = Vector3.Distance(agentInitialPosition, targetInitialPosition);
     }
 
     // 에피소드 시작 시 호출
     public override void OnEpisodeBegin()
     {
+        // 에이전트의 초기 위치 저장 (에피소드마다 갱신)
+        agentInitialPosition = transform.localPosition;
+
+        // 에이전트와 목표 간 초기 거리 계산
         initialDistance = Vector3.Distance(agentInitialPosition, targetInitialPosition);
     }
 
@@ -60,8 +60,7 @@ public class Runner : Agent
         float moveX = Mathf.Clamp(actions.ContinuousActions[0], -1f, 1f); // X축 이동
         float moveZ = Mathf.Clamp(actions.ContinuousActions[1], -1f, 1f); // Z축 이동
 
-        
-       
+        // Rigidbody를 통한 이동
         rb.MovePosition(transform.position + new Vector3(moveX, 0, moveZ) * Time.deltaTime * moveSpeed);
 
         // 필드 경계 확인
@@ -80,7 +79,7 @@ public class Runner : Agent
         }
     }
 
-    // 물리적 충돌 처리 // 물리적 충돌 처리
+    // 물리적 충돌 처리
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject == targetTransform.gameObject)
