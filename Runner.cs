@@ -1,123 +1,85 @@
 using UnityEngine;
 using Unity.MLAgents;
-using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
+using Unity.MLAgents.Sensors;
 
-public class Runner : Agent
+public class NemoRunner : Agent
 {
-    private Vector3 targetInitialPosition; // 목표의 초기 위치
-    public Transform targetTransform;     // 목표 Transform
-    public GameObject field;              // 필드 GameObject
-    public float moveSpeed = 50f;         // 에이전트 이동 속도
+    public Transform nemo;           // 네모(Nemo) 에이전트
+    public Transform goal;           // 목표 지점
+    public float speed = 5f;         // 이동 속도
 
-    private float initialDistance;        // 초기 목표 거리 저장
-    private Rigidbody rb;                 // Rigidbody 캐싱
-    private Vector3 agentInitialPosition; // 에이전트의 초기 위치
-
-    // 에이전트 초기화
     public override void Initialize()
     {
-        // Rigidbody 캐싱
-        rb = GetComponent<Rigidbody>();
-
-        // 목표의 초기 위치 저장
-        targetInitialPosition = targetTransform.localPosition;
+        // 초기화 로직
     }
 
-    // 에피소드 시작 시 호출
     public override void OnEpisodeBegin()
     {
-        // 에이전트의 초기 위치 저장 (에피소드마다 갱신)
-        agentInitialPosition = transform.localPosition;
-
-        // 에이전트와 목표 간 초기 거리 계산
-        initialDistance = Vector3.Distance(agentInitialPosition, targetInitialPosition);
+        // 목표 위치를 X, Z 범위 -10에서 10 사이로 랜덤화
+        goal.localPosition = new Vector3(
+            Random.Range(-10f, 10f), // X축 범위
+            goal.localPosition.y,   // Y축 유지
+            Random.Range(-10f, 10f) // Z축 범위
+        );
     }
 
-    // 관측 데이터 수집
     public override void CollectObservations(VectorSensor sensor)
     {
-        // 목표의 초기 위치 관측
-        sensor.AddObservation(targetInitialPosition);
-
-        // 목표와 에이전트의 상대 위치 관측
-        sensor.AddObservation(targetTransform.localPosition - transform.localPosition);
-
-        // 에이전트의 현재 위치 관측
-        sensor.AddObservation(transform.localPosition);
-
-        // 필드 경계 크기 관측 (필드가 설정된 경우)
-     if (field != null)
-{
-    Bounds fieldBounds = field.GetComponent<Collider>().bounds;
-    sensor.AddObservation(fieldBounds.size); // 3 (Vector3)
-}
-else
-{
-    sensor.AddObservation(Vector3.zero); // 필드가 없을 경우 기본값 추가
-}
-
+        // 네모의 현재 위치를 관찰
+        sensor.AddObservation(nemo.localPosition);
+        // 목표의 현재 위치를 관찰
+        sensor.AddObservation(goal.localPosition);
     }
 
-    // Rigidbody를 통한 행동을 받아 에이전트 이동
-    public override void OnActionReceived(ActionBuffers actions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
     {
-        float moveX = Mathf.Clamp(actions.ContinuousActions[0], -1f, 1f); // X축 이동
-        float moveZ = Mathf.Clamp(actions.ContinuousActions[1], -1f, 1f); // Z축 이동
+        // 행동 값 받기 (0: 움직이지 않음, 1: 전진, 2: 후진, 3: 왼쪽, 4: 오른쪽)
+        int action = actionBuffers.DiscreteActions[0];
 
-        // Rigidbody를 통한 이동
-        rb.MovePosition(transform.position + new Vector3(moveX, 0, moveZ) * Time.deltaTime * moveSpeed);
-
-        // 필드 경계 확인
-        if (!IsWithinFieldBounds(transform.localPosition))
+        Vector3 move = Vector3.zero;
+        switch (action)
         {
-            SetReward(-10f); // 필드 이탈 페널티
-            EndEpisode();
+            case 1: // 전진
+                move = Vector3.forward * speed * Time.deltaTime;
+                break;
+            case 2: // 후진
+                move = Vector3.back * speed * Time.deltaTime;
+                break;
+            case 3: // 왼쪽
+                move = Vector3.left * speed * Time.deltaTime;
+                break;
+            case 4: // 오른쪽
+                move = Vector3.right * speed * Time.deltaTime;
+                break;
         }
 
-        // 목표와의 거리 보상 계산
-        float currentDistance = Vector3.Distance(transform.localPosition, targetTransform.localPosition);
-        if (currentDistance < initialDistance)
+        // 이동 적용
+        nemo.localPosition += move;
+
+        // 목표 도달 여부 확인
+        if (Vector3.Distance(nemo.localPosition, goal.localPosition) < 1f)
         {
-            AddReward((initialDistance - currentDistance) / initialDistance);
-            initialDistance = currentDistance; // 거리 갱신
+            SetReward(1f); // 목표 도달 시 보상
+            EndEpisode(); // 에피소드 종료
+        }
+
+        // 가만히 있는 경우 손실 부여
+        if (action == 0) // 행동이 "가만히 있음"일 경우
+        {
+            AddReward(-0.001f); // 손실 추가
         }
     }
 
-    // 물리적 충돌 처리
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject == targetTransform.gameObject)
-        {
-            SetReward(10.0f); // 목표 도달 보상
-            EndEpisode();
-        }
-        else
-        {
-            SetReward(-0.5f); // 목표가 아닌 다른 물체와 충돌 시 페널티 (선택 사항)
-        }
-    }
-
-    // 필드 경계 확인
-    private bool IsWithinFieldBounds(Vector3 position)
-    {
-        if (field == null)
-        {
-            Debug.LogWarning("Field GameObject가 설정되지 않았습니다.");
-            return true;
-        }
-
-        Bounds fieldBounds = field.GetComponent<Collider>().bounds;
-        return fieldBounds.Contains(position); // 필드 내부인지 확인
-    }
     public override void Heuristic(in ActionBuffers actionsOut)
-{
-    var continuousActions = actionsOut.ContinuousActions;
+    {
+        // 수동 제어를 위한 로직
+        var discreteActions = actionsOut.DiscreteActions;
+        discreteActions[0] = 0; // 기본값: 움직이지 않음
 
-    // 예: 키보드 입력으로 X, Z 방향 이동 결정
-    continuousActions[0] = Input.GetAxis("Horizontal"); // X축 (A/D 키)
-    continuousActions[1] = Input.GetAxis("Vertical");   // Z축 (W/S 키)
-}
-
-  
+        if (Input.GetKey(KeyCode.W)) discreteActions[0] = 1; // 전진
+        if (Input.GetKey(KeyCode.S)) discreteActions[0] = 2; // 후진
+        if (Input.GetKey(KeyCode.A)) discreteActions[0] = 3; // 왼쪽
+        if (Input.GetKey(KeyCode.D)) discreteActions[0] = 4; // 오른쪽
+    }
 }
