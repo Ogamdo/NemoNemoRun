@@ -3,11 +3,11 @@ using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 
-public class NemoRunner : Agent
+public class Runner : Agent
 {
     public Transform nemo;           // 네모(Nemo) 에이전트
     public Transform goal;           // 목표 지점
-    public float speed = 5f;         // 이동 속도
+    public float speed = 100f;         // 이동 속도
 
     public override void Initialize()
     {
@@ -17,7 +17,7 @@ public class NemoRunner : Agent
     public override void OnEpisodeBegin()
     {
         // 목표 위치를 X, Z 범위 -10에서 10 사이로 랜덤화
-        goal.localPosition = new Vector3(
+             goal.localPosition = new Vector3(
             Random.Range(-10f, 10f), // X축 범위
             goal.localPosition.y,   // Y축 유지
             Random.Range(-10f, 10f) // Z축 범위
@@ -67,8 +67,13 @@ public class NemoRunner : Agent
         // 가만히 있는 경우 손실 부여
         if (action == 0) // 행동이 "가만히 있음"일 경우
         {
-            AddReward(-0.001f); // 손실 추가
+            AddReward(-0.25f); // 손실 추가
         }
+        if(GetCumulativeReward() < 0.0f)
+        {
+            EndEpisode();
+        }
+
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
