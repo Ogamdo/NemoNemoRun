@@ -19,4 +19,4 @@ behaviors:
         strength: 1.0
     max_steps: 1000000
     time_horizon: 128        # Longer trajectories for better long-term learning
-    summary_freq: 10000        # More frequent logs for closer monitoring
+    summary_freq: 1000        # More frequent logs for closer monitoring
