@@ -36,9 +36,13 @@ public class Runner : Agent
     public override void CollectObservations(VectorSensor sensor)
     {
         // 네모의 현재 위치를 관찰
-        sensor.AddObservation(runner.localPosition);
+        sensor.AddObservation(runner.localPosition.x);
+        sensor.AddObservation(runner.localPosition.z);
+
         // 목표의 현재 위치를 관찰
-        sensor.AddObservation(lover.localPosition);
+    
+        sensor.AddObservation(lover.localPosition.x);
+        sensor.AddObservation(lover.localPosition.z);
         sensor.AddObservation(dis); //lover와 자신 사이의 거리를 관찰함
         
     }
