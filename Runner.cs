@@ -3,24 +3,34 @@ using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 
+
+
 public class Runner : Agent
 {
     public Transform runner;
     public Transform lover;
     public float speed = 5.0f;
+    private float x;
+    private float z;
     private Rigidbody runnerRb;
+    
     private float dis;
-
+    
     public override void Initialize()
     {
         runnerRb = runner.GetComponent<Rigidbody>();
+        x = Random.Range(-5, 5);
+        
+      
     }
 
     public override void OnEpisodeBegin()
     {
-        runner.localPosition = new Vector3(Random.Range(-5.0f, 5.0f), 0.5f, Random.Range(-5.0f, 5.0f));
-        lover.localPosition = new Vector3(Random.Range(-5.0f, 5.0f), 0.5f, Random.Range(-5.0f, 5.0f));
+        runner.transform.localPosition = new Vector3(Random.Range(-5, 5),0,Random.Range(-5, 5));
+        lover.transform.localPosition = new Vector3(Random.Range(6, 10),0,Random.Range(6, 10));
         dis = Vector3.Distance(lover.localPosition, runner.localPosition);
+        
+        
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -39,34 +49,39 @@ public class Runner : Agent
         Vector3 move = Vector3.zero;
         switch (actionBuffers.DiscreteActions[0])
         {
-            case 0: move = Vector3.forward * speed; break;
-            case 1: move = Vector3.back * speed; break;
-            case 2: move = Vector3.left * speed; break;
-            case 3: move = Vector3.right * speed; break;
+            case 0: move = Vector3.forward; break;
+            case 1: move = Vector3.back; break;
+            case 2: move = Vector3.left; break;
+            case 3: move = Vector3.right; break;
         }
 
-        runnerRb.MovePosition(runner.localPosition + move * Time.fixedDeltaTime);
+        transform.Translate(move.normalized*speed*Time.deltaTime);
 
-        if (dis < 1.0f)
+        if(dis<=1.0f)
         {
-            SetReward(1.0f);
+            AddReward(1.0f);
             EndEpisode();
         }
-        else if (dis < 3.0f)
+        else if(dis<=3.0f)
         {
-            AddReward(0.1f);
+            AddReward(0.005f);
+
         }
-        else if (dis > 10.0f)
-        {
-            AddReward(-1.0f);
+        else if(dis>10.0f)
+
+        {   
+            AddReward(-0.5f);
             EndEpisode();
+          
         }
-        else
+        else 
         {
-            AddReward(-0.001f);
+          AddReward(-0.001f);
         }
+      
+        
     }
-
+    
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         var discreteActions = actionsOut.DiscreteActions;
@@ -74,6 +89,6 @@ public class Runner : Agent
         else if (Input.GetKey(KeyCode.S)) discreteActions[0] = 1;
         else if (Input.GetKey(KeyCode.A)) discreteActions[0] = 2;
         else if (Input.GetKey(KeyCode.D)) discreteActions[0] = 3;
-        else discreteActions[0] = -1;
+        else discreteActions[0] = 0;
     }
 }
