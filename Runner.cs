@@ -8,7 +8,7 @@ using Unity.MLAgents.Sensors;
 public class Runner : Agent
 {
     public Transform runner;
-    public Transform lover;
+    public Transform boy;
     public float speed = 5.0f;
    
     private Rigidbody runnerRb;
@@ -26,8 +26,8 @@ public class Runner : Agent
     public override void OnEpisodeBegin()
     {
         runner.transform.localPosition = new Vector3(Random.Range(-5, 5),0,Random.Range(-5, 5));
-        lover.transform.localPosition = new Vector3(Random.Range(6, 10),0,Random.Range(6, 10));
-        dis = Vector3.Distance(lover.localPosition, runner.localPosition);
+        boy.transform.localPosition = new Vector3(Random.Range(6, 10),0,Random.Range(6, 10));
+        dis = Vector3.Distance(boy.localPosition, runner.localPosition);
         
         
     }
@@ -36,14 +36,14 @@ public class Runner : Agent
     {
         sensor.AddObservation(runner.localPosition.x);
         sensor.AddObservation(runner.localPosition.z);
-        sensor.AddObservation(lover.localPosition.x);
-        sensor.AddObservation(lover.localPosition.z);
+        sensor.AddObservation(boy.localPosition.x);
+        sensor.AddObservation(boy.localPosition.z);
         sensor.AddObservation(dis);
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
-        dis = Vector3.Distance(lover.localPosition, runner.localPosition);
+        dis = Vector3.Distance(boy.localPosition, runner.localPosition);
 
         Vector3 move = Vector3.zero;
         switch (actionBuffers.DiscreteActions[0])
