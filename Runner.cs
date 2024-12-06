@@ -10,8 +10,7 @@ public class Runner : Agent
     public Transform runner;
     public Transform lover;
     public float speed = 5.0f;
-    private float x;
-    private float z;
+   
     private Rigidbody runnerRb;
     
     private float dis;
@@ -19,7 +18,7 @@ public class Runner : Agent
     public override void Initialize()
     {
         runnerRb = runner.GetComponent<Rigidbody>();
-        x = Random.Range(-5, 5);
+     
         
       
     }
