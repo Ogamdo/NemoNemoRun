@@ -16,7 +16,7 @@ public class Boy : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        Filed = GetComponent<BoxCollider>();
+        
         bounds = Filed.bounds;
         nav = GetComponent<NavMeshAgent>();
         nav.speed = speed;

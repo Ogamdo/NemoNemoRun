@@ -8,7 +8,7 @@ public class Runner : Agent
     public Transform runner;
     public Transform boy;
     public Transform fox;
-    public float speed = 5.0f;
+    public float speed = 20.0f;
 
     private Rigidbody runnerRb;
     private float disB;
@@ -18,19 +18,20 @@ public class Runner : Agent
     {
         // 러너 Rigidbody 초기화
         runnerRb = runner.GetComponent<Rigidbody>();
+        runner =runnerRb.GetComponent<Transform>();
+
     }
 
     public override void OnEpisodeBegin()
     {
         // 에피소드 초기화: 러너와 소년의 위치를 랜덤으로 설정
-        runner.transform.localPosition = new Vector3(Random.Range(-5, 5), 0, Random.Range(-5, 5));
-        boy.transform.localPosition = new Vector3(Random.Range(6, 10), 0, Random.Range(6, 10));
+        runner.transform.localPosition = new Vector3(Random.Range(-10, 10), 0, Random.Range(-10, 10));
+        boy.transform.localPosition = new Vector3(Random.Range(-10, 10), 0, Random.Range(-10, 10));
+        fox.transform.localPosition = new Vector3(Random.Range(-10, 10),0, Random.Range(-10, 10));
         disB = Vector3.Distance(boy.localPosition, runner.localPosition);
         disF = Vector3.Distance(fox.localPosition, runner.localPosition);
 
-        // 러너의 속도를 초기화
-        runnerRb.velocity = Vector3.zero;
-        runnerRb.angularVelocity = Vector3.zero;
+        
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -77,9 +78,18 @@ public class Runner : Agent
             AddReward(1.0f); // 목표 도달 보상
             EndEpisode();
         }
+        else if (disB >10.0f)
+        {
+            AddReward(-0.5f);
+            EndEpisode();
+        }
         else
         {
             AddReward(-0.001f); // 시간 경과에 따른 작은 페널티
+        }
+        if(GetCumulativeReward() <=0f)
+        {
+            EndEpisode();
         }
     }
 
