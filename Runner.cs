@@ -61,18 +61,6 @@ public class Runner : Agent
             AddReward(1.0f);
             EndEpisode();
         }
-        else if(dis<=5.0f)
-        {
-            AddReward(0.005f);
-
-        }
-        else if(dis>10.0f)
-
-        {   
-            AddReward(-0.5f);
-            EndEpisode();
-          
-        }
         else 
         {
           AddReward(-0.001f);
