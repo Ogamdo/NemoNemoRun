@@ -80,7 +80,7 @@ public class Runner : Agent
         }
         else if (disB >10.0f)
         {
-            AddReward(-0.5f);
+            AddReward(-0.2f);
             EndEpisode();
         }
         else

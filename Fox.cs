@@ -36,6 +36,7 @@ public class Fox : MonoBehaviour
             Stalking();
         }
 
+        /*
         // runner를 레이로 감지
         Ray ray = new Ray(tr.position, tr.forward);
         RaycastHit hit;
@@ -44,12 +45,13 @@ public class Fox : MonoBehaviour
         {
             if (hit.collider.gameObject == runner)
             {
-                Smash(); // runner 감지 시 Smash 실행
+                // Smash(); // runner 감지 시 Smash 실행
             }
         }
 
         // 디버깅용 레이 시각화
         Debug.DrawRay(tr.position, tr.forward * detectionRange, Color.red);
+        */
     }
 
     // boy를 추적하며 빠르게 회전
@@ -70,6 +72,7 @@ public class Fox : MonoBehaviour
     }
 
     // Smash 동작
+    /*
     void Smash()
     {
         if (rb != null)
@@ -79,4 +82,5 @@ public class Fox : MonoBehaviour
             Debug.Log("Smash executed!");
         }
     }
+    */
 }
